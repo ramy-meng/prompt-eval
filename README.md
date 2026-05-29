@@ -20,12 +20,12 @@ A prompt evaluation system built with the Anthropic API that uses Claude as an a
 
 ```
 prompt-eval/
-├── eval.py                    # Main eval system — compares prompts head-to-head
-├── simple_eval.py             # Single prompt eval against multiple test cases
-├── diff_prompt_same_test.py   # A/B prompt comparison experiments
-├── test.py                    # First API call test
-├── .env.example               # Environment variable template
-└── .gitignore                 # Keeps API key out of version control
+├── prompt_comparison.py   # Compares Prompt A vs B vs C head-to-head with scores
+├── prompt_judge.py        # Runs a single prompt through the LLM-as-judge eval
+├── prompt_runner.py       # Runs a prompt against test cases, no judge
+├── test.py                # First API call — verifies setup works
+├── .env.example           # Environment variable template
+└── .gitignore             # Keeps API key out of version control
 ```
 
 ## Setup
@@ -47,9 +47,19 @@ cp .env.example .env
 ```
 Open `.env` and replace `your-api-key-here` with your actual Anthropic API key from [console.anthropic.com](https://console.anthropic.com).
 
-**4. Run the eval**
+**4. Run the files**
 ```bash
-python3 eval.py
+# Verify your setup works
+python3 test.py
+
+# Run a prompt against test cases (no scoring)
+python3 prompt_runner.py
+
+# Run a prompt and get an automated score
+python3 prompt_judge.py
+
+# Compare Prompt A vs B vs C and see the winner
+python3 prompt_comparison.py
 ```
 
 ## How It Works
