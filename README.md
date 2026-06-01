@@ -16,19 +16,26 @@ A prompt evaluation system built with the Anthropic API that uses Claude as an a
 - How to iterate on prompts using data instead of guesswork
 - Why prompt scoring has variance and how to account for it
 
+## Want to See the Results Without Running the Code?
+
+Check out [`prompt_comparison_results.md`](./prompt_comparison_results.md) for the full breakdown — all test cases, judge scores, and key takeaways. No API key or setup needed.
+
 ## Project Structure
 
 ```
 prompt-eval/
-├── prompt_comparison.py   # Compares Prompt A vs B vs C head-to-head with scores
-├── prompt_judge.py        # Runs a single prompt through the LLM-as-judge eval
-├── prompt_runner.py       # Runs a prompt against test cases, no judge
-├── test.py                # First API call — verifies setup works
-├── .env.example           # Environment variable template
-└── .gitignore             # Keeps API key out of version control
+├── prompt_comparison.py            # Compares Prompt A vs B vs C head-to-head with scores
+├── prompt_judge.py                 # Runs a single prompt through the LLM-as-judge eval
+├── prompt_runner.py                # Runs a prompt against test cases, no judge
+├── test.py                         # First API call — verifies setup works
+├── prompt_comparison_results.md    # Full eval results — readable without running the code
+├── .env.example                    # Environment variable template
+└── .gitignore                      # Keeps API key out of version control
 ```
 
 ## Setup
+
+> **Note:** Running the code requires an Anthropic API key. You can get one at [console.anthropic.com](https://console.anthropic.com) — $5 in credits is more than enough to run all the scripts. If you just want to read the results, see [`prompt_comparison_results.md`](./prompt_comparison_results.md) instead.
 
 **1. Clone the repo**
 ```bash
@@ -83,11 +90,13 @@ After iterating through three prompts:
 
 | Prompt | Description | Score |
 |--------|-------------|-------|
-| Prompt A | Original — polite and professional | 8.0/10 |
+| Prompt A | Original — polite and professional | 8.2/10 |
 | Prompt B | Empathetic — acknowledge feelings first | 8.4/10 |
 | Prompt C | Conversational — no markdown, no emojis when angry | 9.0/10 |
 
 **Winner: Prompt C** — The judge consistently flagged over-formatting and misplaced emojis as weaknesses. Prompt C addressed both and scored a full point higher.
+
+See the full breakdown in [`prompt_comparison_results.md`](./prompt_comparison_results.md).
 
 ## Key Insight
 
