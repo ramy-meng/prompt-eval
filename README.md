@@ -1,6 +1,6 @@
 # Prompt Eval System
 
-A prompt evaluation system built with the Anthropic API that uses Claude as an automated judge (LLM-as-judge pattern) to score and compare prompt performance across multiple test cases.
+A prompt evaluation system built with the Anthropic API that uses Claude as an automated judge (LLM-as-judge pattern) to score and compare prompt performance across multiple test cases. Also includes a minimal RAG (Retrieval-Augmented Generation) demo showing how to give Claude context to answer domain-specific questions.
 
 ## What It Does
 
@@ -8,6 +8,7 @@ A prompt evaluation system built with the Anthropic API that uses Claude as an a
 - Uses a second Claude instance as an impartial judge to score each response
 - Compares multiple prompts head-to-head and declares a winner
 - Produces a final aggregate score to measure prompt quality objectively
+- Demonstrates RAG by augmenting Claude with a company FAQ as context
 
 ## What I Learned
 
@@ -15,27 +16,37 @@ A prompt evaluation system built with the Anthropic API that uses Claude as an a
 - The LLM-as-judge pattern used in real AI evaluation pipelines
 - How to iterate on prompts using data instead of guesswork
 - Why prompt scoring has variance and how to account for it
+- How Retrieval-Augmented Generation (RAG) gives Claude context for domain-specific questions
+- How Constitutional AI uses similar principles at training scale
 
 ## Want to See the Results Without Running the Code?
 
-Check out [`prompt_comparison_results.md`](./prompt_comparison_results.md) for the full breakdown — all test cases, judge scores, and key takeaways. No API key or setup needed.
+Check out the results files for the full breakdown — all test cases, judge scores, and key takeaways. No API key or setup needed.
+
+- [`prompt_and_eval/prompt_comparison_results.md`](./prompt_and_eval/prompt_comparison_results.md) — prompt eval results
+- [`rag/rag_results.md`](./rag/rag_results.md) — RAG demo results
 
 ## Project Structure
 
 ```
 prompt-eval/
-├── prompt_comparison.py            # Compares Prompt A vs B vs C head-to-head with scores
-├── prompt_judge.py                 # Runs a single prompt through the LLM-as-judge eval
-├── prompt_runner.py                # Runs a prompt against test cases, no judge
-├── test.py                         # First API call — verifies setup works
-├── prompt_comparison_results.md    # Full eval results — readable without running the code
-├── .env.example                    # Environment variable template
-└── .gitignore                      # Keeps API key out of version control
+├── prompt_and_eval/
+│   ├── prompt_comparison.py            # Compares Prompt A vs B vs C head-to-head with scores
+│   ├── prompt_judge.py                 # Runs a single prompt through the LLM-as-judge eval
+│   ├── prompt_runner.py                # Runs a prompt against test cases, no judge
+│   ├── test.py                         # First API call — verifies setup works
+│   └── prompt_comparison_results.md    # Full eval results — readable without running the code
+├── rag/
+│   ├── rag_demo.py                     # Minimal RAG system using a company FAQ as context
+│   ├── company_faq.txt                 # Sample knowledge base for the RAG demo
+│   └── rag_results.md                  # RAG demo results — readable without running the code
+├── .env.example                        # Environment variable template
+└── .gitignore                          # Keeps API key out of version control
 ```
 
 ## Setup
 
-> **Note:** Running the code requires an Anthropic API key. You can get one at [console.anthropic.com](https://console.anthropic.com) — $5 in credits is more than enough to run all the scripts. If you just want to read the results, see [`prompt_comparison_results.md`](./prompt_comparison_results.md) instead.
+> **Note:** Running the code requires an Anthropic API key. You can get one at [console.anthropic.com](https://console.anthropic.com) — $5 in credits is more than enough to run all the scripts. If you just want to read the results, see the result markdown files above instead.
 
 **1. Clone the repo**
 ```bash
@@ -57,34 +68,52 @@ Open `.env` and replace `your-api-key-here` with your actual Anthropic API key f
 **4. Run the files**
 ```bash
 # Verify your setup works
-python3 test.py
+python3 prompt_and_eval/test.py
 
 # Run a prompt against test cases (no scoring)
-python3 prompt_runner.py
+python3 prompt_and_eval/prompt_runner.py
 
 # Run a prompt and get an automated score
-python3 prompt_judge.py
+python3 prompt_and_eval/prompt_judge.py
 
 # Compare Prompt A vs B vs C and see the winner
-python3 prompt_comparison.py
+python3 prompt_and_eval/prompt_comparison.py
+
+# Run the RAG demo using the company FAQ as context
+python3 rag/rag_demo.py
 ```
 
 ## How It Works
 
-### Step 1 — The Agent
+### Prompt Eval (LLM-as-Judge)
+
+**Step 1 — The Agent**
 Claude is given a system prompt and responds to customer support messages.
 
-### Step 2 — The Judge
+**Step 2 — The Judge**
 A second Claude call evaluates the response on four criteria:
 - **Politeness** — is it warm and respectful?
 - **Clarity** — is it easy to understand?
 - **Helpfulness** — does it actually solve the problem?
 - **Conciseness** — is it to the point without being cold?
 
-### Step 3 — Compare & Iterate
+**Step 3 — Compare & Iterate**
 Prompts are scored and ranked. The winning prompt is the one that consistently scores highest across all test cases.
 
+### RAG Demo
+
+**Step 1 — Retrieval**
+Load relevant content from `company_faq.txt`.
+
+**Step 2 — Augmented**
+Stuff the relevant content into the prompt as context.
+
+**Step 3 — Generation**
+Claude answers the user's question based on the provided context — and honestly says "I don't know" when the answer isn't in the FAQ.
+
 ## Results
+
+### Prompt Comparison
 
 After iterating through three prompts:
 
@@ -96,7 +125,13 @@ After iterating through three prompts:
 
 **Winner: Prompt C** — The judge consistently flagged over-formatting and misplaced emojis as weaknesses. Prompt C addressed both and scored a full point higher.
 
-See the full breakdown in [`prompt_comparison_results.md`](./prompt_comparison_results.md).
+See the full breakdown in [`prompt_and_eval/prompt_comparison_results.md`](./prompt_and_eval/prompt_comparison_results.md).
+
+### RAG Demo
+
+Claude correctly answered 3 questions using the FAQ as context and honestly admitted it didn't know the dress code (not in the FAQ) instead of making something up — exactly the "harmless but non-evasive" behavior the Anthropic Model Spec describes.
+
+See the full breakdown in [`rag/rag_results.md`](./rag/rag_results.md).
 
 ## Key Insight
 
