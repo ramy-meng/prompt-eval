@@ -47,7 +47,23 @@ questions = [
     "When do I get reimbursed for expenses?"
 ]
 
-for q in questions:
-    print(f"\n❓ Question: {q}")
-    print(f"💬 Answer: {ask_with_rag(q)}")
-    print("-" * 60)
+# Open a file to log responses
+with open("rag_results.md", "w") as log:
+    log.write("# RAG Demo Results\n\n")
+    log.write("Results from running `rag_demo.py` — Claude answering questions using the company FAQ as context.\n\n")
+    log.write("---\n\n")
+    
+    for q in questions:
+        answer = ask_with_rag(q)
+        
+        # Print to terminal
+        print(f"\n❓ Question: {q}")
+        print(f"💬 Answer: {answer}")
+        print("-" * 60)
+        
+        # Write to file
+        log.write(f"## ❓ {q}\n\n")
+        log.write(f"{answer}\n\n")
+        log.write("---\n\n")
+
+print("\n✅ Results saved to rag_results.md")
