@@ -1,6 +1,6 @@
 # Prompt Eval System
 
-A prompt evaluation system built with the Anthropic API that uses Claude as an automated judge (LLM-as-judge pattern) to score and compare prompt performance across multiple test cases. Also includes a minimal RAG (Retrieval-Augmented Generation) demo showing how to give Claude context to answer domain-specific questions.
+A prompt evaluation system built with the Anthropic API that uses Claude as an automated judge (LLM-as-judge pattern) to score and compare prompt performance across multiple test cases. Also includes a minimal RAG (Retrieval-Augmented Generation) demo showing how to give Claude context to answer domain-specific questions, and a Chain-of-Thought (CoT) version of the judge that shows step-by-step reasoning before scoring.
 
 ## What It Does
 
@@ -9,6 +9,7 @@ A prompt evaluation system built with the Anthropic API that uses Claude as an a
 - Compares multiple prompts head-to-head and declares a winner
 - Produces a final aggregate score to measure prompt quality objectively
 - Demonstrates RAG by augmenting Claude with a company FAQ as context
+- Demonstrates Chain-of-Thought (CoT) prompting to make the judge more transparent and accurate
 
 ## What I Learned
 
@@ -17,6 +18,7 @@ A prompt evaluation system built with the Anthropic API that uses Claude as an a
 - How to iterate on prompts using data instead of guesswork
 - Why prompt scoring has variance and how to account for it
 - How Retrieval-Augmented Generation (RAG) gives Claude context for domain-specific questions
+- How Chain-of-Thought reasoning improves transparency and surfaces hidden weaknesses
 - How Constitutional AI uses similar principles at training scale
 
 ## Want to See the Results Without Running the Code?
@@ -24,6 +26,7 @@ A prompt evaluation system built with the Anthropic API that uses Claude as an a
 Check out the results files for the full breakdown — all test cases, judge scores, and key takeaways. No API key or setup needed.
 
 - [`prompt_and_eval/prompt_comparison_results.md`](./prompt_and_eval/prompt_comparison_results.md) — prompt eval results
+- [`prompt_and_eval/prompt_judge_results.md`](./prompt_and_eval/prompt_judge_results.md) — Chain-of-Thought judge results
 - [`rag/rag_results.md`](./rag/rag_results.md) — RAG demo results
 
 ## Project Structure
@@ -32,14 +35,16 @@ Check out the results files for the full breakdown — all test cases, judge sco
 prompt-eval/
 ├── prompt_and_eval/
 │   ├── prompt_comparison.py            # Compares Prompt A vs B vs C head-to-head with scores
-│   ├── prompt_judge.py                 # Runs a single prompt through the LLM-as-judge eval
+│   ├── prompt_judge.py                 # Single-prompt eval with baseline judge
+│   ├── prompt_judge_cot.py             # Same eval but with Chain-of-Thought reasoning
 │   ├── prompt_runner.py                # Runs a prompt against test cases, no judge
 │   ├── test.py                         # First API call — verifies setup works
-│   └── prompt_comparison_results.md    # Full eval results — readable without running the code
+│   ├── prompt_comparison_results.md    # Full prompt comparison results
+│   └── prompt_judge_results.md         # Chain-of-Thought judge results
 ├── rag/
 │   ├── rag_demo.py                     # Minimal RAG system using a company FAQ as context
 │   ├── company_faq.txt                 # Sample knowledge base for the RAG demo
-│   └── rag_results.md                  # RAG demo results — readable without running the code
+│   └── rag_results.md                  # RAG demo results
 ├── .env.example                        # Environment variable template
 └── .gitignore                          # Keeps API key out of version control
 ```
@@ -73,8 +78,11 @@ python3 prompt_and_eval/test.py
 # Run a prompt against test cases (no scoring)
 python3 prompt_and_eval/prompt_runner.py
 
-# Run a prompt and get an automated score
+# Run a prompt and get an automated score (baseline judge)
 python3 prompt_and_eval/prompt_judge.py
+
+# Run the same eval with a Chain-of-Thought judge
+python3 prompt_and_eval/prompt_judge_cot.py
 
 # Compare Prompt A vs B vs C and see the winner
 python3 prompt_and_eval/prompt_comparison.py
@@ -99,6 +107,16 @@ A second Claude call evaluates the response on four criteria:
 
 **Step 3 — Compare & Iterate**
 Prompts are scored and ranked. The winning prompt is the one that consistently scores highest across all test cases.
+
+### Chain-of-Thought (CoT) Judge
+
+The CoT version asks the judge to **reason through each criterion individually before scoring**. This produces more transparent, more accurate, and more honest evaluations — though it is slower and uses more tokens.
+
+**Trade-offs:**
+- ✅ More accurate and consistent scoring
+- ✅ Transparent reasoning you can debug
+- ❌ Slower response time
+- ❌ Higher token cost
 
 ### RAG Demo
 
@@ -127,6 +145,16 @@ After iterating through three prompts:
 
 See the full breakdown in [`prompt_and_eval/prompt_comparison_results.md`](./prompt_and_eval/prompt_comparison_results.md).
 
+### Chain-of-Thought Judge
+
+Adding CoT to the judge made the evaluations more rigorous. One test case dropped from 8/10 (baseline) to 6/10 (CoT) — not because the response got worse, but because the CoT judge couldn't hand-wave weaknesses anymore. It had to defend each criterion individually, surfacing problems (like over-formatting) that the baseline judge glossed over.
+
+This mirrors a key insight from the Constitutional AI paper:
+
+> *"Both the SL and RL methods can leverage chain-of-thought style reasoning to improve the human-judged performance and transparency of AI decision making."*
+
+See the full breakdown in [`prompt_and_eval/prompt_judge_results.md`](./prompt_and_eval/prompt_judge_results.md).
+
 ### RAG Demo
 
 Claude correctly answered 3 questions using the FAQ as context and honestly admitted it didn't know the dress code (not in the FAQ) instead of making something up — exactly the "harmless but non-evasive" behavior the Anthropic Model Spec describes.
@@ -135,7 +163,7 @@ See the full breakdown in [`rag/rag_results.md`](./rag/rag_results.md).
 
 ## Key Insight
 
-The judge has no memory of writing the response it evaluates. By giving Claude a different persona (evaluator vs. agent), it assesses the output neutrally — the same principle behind Constitutional AI and RLHF.
+The judge has no memory of writing the response it evaluates. By giving Claude a different persona (evaluator vs. agent), it assesses the output neutrally — the same principle behind Constitutional AI and RLHF. Adding Chain-of-Thought reasoning to that judge makes the evaluation even more transparent and accurate, at the cost of speed and tokens.
 
 ## Built With
 
