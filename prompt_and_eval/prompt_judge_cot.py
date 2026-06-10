@@ -105,4 +105,4 @@ with open("prompt_judge_results.md", "w") as log:
 
     log.write(f"## ✅ Final Score: {avg_score:.1f}/10\n")
 
-print("\n✅ Results saved to prompt_judge_results.md")
+print("\n✅ Results saved to prompt_judge_results_cot.md")
