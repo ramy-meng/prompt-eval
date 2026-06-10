@@ -147,7 +147,9 @@ See the full breakdown in [`prompt_and_eval/prompt_comparison_results.md`](./pro
 
 ### Chain-of-Thought Judge
 
-Adding CoT to the judge made the evaluations more rigorous. One test case dropped from 8/10 (baseline) to 6/10 (CoT) — not because the response got worse, but because the CoT judge couldn't hand-wave weaknesses anymore. It had to defend each criterion individually, surfacing problems (like over-formatting) that the baseline judge glossed over.
+Both the baseline judge and the CoT judge produced the same final aggregate score of **8.2/10** — but the CoT judge surfaced individual weaknesses much more clearly. For example, one test case scored 6/10 with CoT because the judge broke down conciseness (4/10) separately from clarity (7/10), exposing over-formatting that the baseline judge had glossed over with a vague "slightly verbose" comment.
+
+The takeaway: **CoT doesn't always change the score, but it always changes the quality of the evaluation.** It makes weaknesses visible and reasoning auditable — which matters far more than the final number when you're trying to improve a prompt.
 
 This mirrors a key insight from the Constitutional AI paper:
 
