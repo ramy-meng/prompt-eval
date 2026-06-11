@@ -1,6 +1,6 @@
 # Prompt Eval System
 
-A prompt evaluation system built with the Anthropic API that uses Claude as an automated judge (LLM-as-judge pattern) to score and compare prompt performance across multiple test cases. Also includes a minimal RAG (Retrieval-Augmented Generation) demo showing how to give Claude context to answer domain-specific questions, and a Chain-of-Thought (CoT) version of the judge that shows step-by-step reasoning before scoring.
+A prompt evaluation system built with the Anthropic API that uses Claude as an automated judge (LLM-as-judge pattern) to score and compare prompt performance across multiple test cases. Also includes a Retrieval-Augmented Generation (RAG) demo, a Chain-of-Thought (CoT) version of the judge, and a semantic search system using embeddings to retrieve only the most relevant context — a production-style upgrade to RAG.
 
 ## What It Does
 
@@ -10,6 +10,7 @@ A prompt evaluation system built with the Anthropic API that uses Claude as an a
 - Produces a final aggregate score to measure prompt quality objectively
 - Demonstrates RAG by augmenting Claude with a company FAQ as context
 - Demonstrates Chain-of-Thought (CoT) prompting to make the judge more transparent and accurate
+- Demonstrates semantic search using Voyage AI embeddings and cosine similarity
 
 ## What I Learned
 
@@ -19,6 +20,8 @@ A prompt evaluation system built with the Anthropic API that uses Claude as an a
 - Why prompt scoring has variance and how to account for it
 - How Retrieval-Augmented Generation (RAG) gives Claude context for domain-specific questions
 - How Chain-of-Thought reasoning improves transparency and surfaces hidden weaknesses
+- How embeddings turn text into vectors so meaning can be compared mathematically
+- How semantic search retrieves relevant chunks based on meaning rather than keywords
 - How Constitutional AI uses similar principles at training scale
 
 ## Want to See the Results Without Running the Code?
@@ -28,6 +31,7 @@ Check out the results files for the full breakdown — all test cases, judge sco
 - [`prompt_and_eval/prompt_comparison_results.md`](./prompt_and_eval/prompt_comparison_results.md) — prompt eval results
 - [`prompt_and_eval/prompt_judge_results.md`](./prompt_and_eval/prompt_judge_results.md) — Chain-of-Thought judge results
 - [`rag/rag_results.md`](./rag/rag_results.md) — RAG demo results
+- [`rag/semantic_search_results.md`](./rag/semantic_search_results.md) — semantic search results
 
 ## Project Structure
 
@@ -43,15 +47,17 @@ prompt-eval/
 │   └── prompt_judge_results.md         # Chain-of-Thought judge results
 ├── rag/
 │   ├── rag_demo.py                     # Minimal RAG system using a company FAQ as context
+│   ├── semantic_search.py              # Embeddings + cosine similarity for chunk retrieval
 │   ├── company_faq.txt                 # Sample knowledge base for the RAG demo
-│   └── rag_results.md                  # RAG demo results
+│   ├── rag_results.md                  # RAG demo results
+│   └── semantic_search_results.md      # Semantic search results
 ├── .env.example                        # Environment variable template
 └── .gitignore                          # Keeps API key out of version control
 ```
 
 ## Setup
 
-> **Note:** Running the code requires an Anthropic API key. You can get one at [console.anthropic.com](https://console.anthropic.com) — $5 in credits is more than enough to run all the scripts. If you just want to read the results, see the result markdown files above instead.
+> **Note:** Running the code requires an Anthropic API key. You can get one at [console.anthropic.com](https://console.anthropic.com) — $5 in credits is more than enough to run all the scripts. The semantic search demo also requires a free Voyage AI API key from [voyageai.com](https://www.voyageai.com/). If you just want to read the results, see the result markdown files above instead.
 
 **1. Clone the repo**
 ```bash
@@ -61,14 +67,18 @@ cd prompt-eval
 
 **2. Install dependencies**
 ```bash
-pip install anthropic python-dotenv
+pip install anthropic python-dotenv voyageai
 ```
 
-**3. Add your API key**
+**3. Add your API keys**
 ```bash
 cp .env.example .env
 ```
-Open `.env` and replace `your-api-key-here` with your actual Anthropic API key from [console.anthropic.com](https://console.anthropic.com).
+Open `.env` and add your keys:
+```
+ANTHROPIC_API_KEY=your-anthropic-key-here
+VOYAGE_API_KEY=your-voyage-key-here
+```
 
 **4. Run the files**
 ```bash
@@ -87,8 +97,11 @@ python3 prompt_and_eval/prompt_judge_cot.py
 # Compare Prompt A vs B vs C and see the winner
 python3 prompt_and_eval/prompt_comparison.py
 
-# Run the RAG demo using the company FAQ as context
+# Run the basic RAG demo using the company FAQ as context
 python3 rag/rag_demo.py
+
+# Run the semantic search demo using embeddings
+python3 rag/semantic_search.py
 ```
 
 ## How It Works
@@ -129,6 +142,22 @@ Stuff the relevant content into the prompt as context.
 **Step 3 — Generation**
 Claude answers the user's question based on the provided context — and honestly says "I don't know" when the answer isn't in the FAQ.
 
+### Semantic Search
+
+The basic RAG demo sends the entire FAQ to Claude as context. That works for small documents but doesn't scale. Semantic search upgrades this:
+
+**Step 1 — Chunk**
+Split the FAQ into smaller sections.
+
+**Step 2 — Embed**
+Convert each chunk into a 1024-dimensional vector using Voyage AI's `voyage-3` model.
+
+**Step 3 — Search**
+Convert the user's question into a vector and find the chunks with the highest cosine similarity.
+
+**Step 4 — Retrieve only the top matches**
+Send just the most relevant chunks to Claude instead of the whole document — cheaper, faster, and scales to thousands of documents.
+
 ## Results
 
 ### Prompt Comparison
@@ -163,12 +192,21 @@ Claude correctly answered 3 questions using the FAQ as context and honestly admi
 
 See the full breakdown in [`rag/rag_results.md`](./rag/rag_results.md).
 
+### Semantic Search
+
+The semantic search demo correctly matched each test question to the right FAQ chunk based on meaning — not keywords. For example, "How many vacation days do I get?" returned the **PTO Policy** chunk as the top match, even though neither the question nor the chunk shares the same word for time off.
+
+This proves embeddings encode **meaning**, not vocabulary — which is exactly what makes them useful for retrieval at scale.
+
+See the full breakdown in [`rag/semantic_search_results.md`](./rag/semantic_search_results.md).
+
 ## Key Insight
 
-The judge has no memory of writing the response it evaluates. By giving Claude a different persona (evaluator vs. agent), it assesses the output neutrally — the same principle behind Constitutional AI and RLHF. Adding Chain-of-Thought reasoning to that judge makes the evaluation even more transparent and accurate, at the cost of speed and tokens.
+The judge has no memory of writing the response it evaluates. By giving Claude a different persona (evaluator vs. agent), it assesses the output neutrally — the same principle behind Constitutional AI and RLHF. Adding Chain-of-Thought reasoning to that judge makes the evaluation even more transparent and accurate, at the cost of speed and tokens. And by using embeddings for retrieval, the same RAG pattern scales from a 5-section FAQ to thousands of documents without breaking.
 
 ## Built With
 
-- [Anthropic API](https://docs.anthropic.com)
+- [Anthropic API](https://docs.anthropic.com) — Claude
+- [Voyage AI](https://www.voyageai.com/) — embeddings for semantic search
 - Python 3
 - python-dotenv

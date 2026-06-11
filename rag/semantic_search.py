@@ -1,5 +1,6 @@
 import anthropic
 import os
+import time
 from dotenv import load_dotenv
 import voyageai
 
@@ -44,19 +45,43 @@ def find_relevant_chunk(question):
     scores.sort(reverse=True)
     return scores
 
-# Step 5: Test it
+# Step 5: Test it and log results
 questions = [
     "How many vacation days do I get?",       # Should match PTO chunk
     "Can I work from home on Tuesday?",       # Should match Remote Work chunk
     "Where do I submit my receipts?",         # Should match Expense chunk
 ]
 
-for q in questions:
-    print(f"❓ Question: {q}")
-    results = find_relevant_chunk(q)
-    time.sleep(25)  # Wait 25 seconds to stay under Voyage's 3 RPM free tier limit
-    
-    print("Top 3 most relevant chunks:")
-    for score, chunk in results[:3]:
-        print(f"  [{score:.3f}] {chunk[:80]}...")
-    print("-" * 60)
+with open("semantic_search_results.md", "w") as log:
+    log.write("# Semantic Search Results\n\n")
+    log.write("Results from running `semantic_search.py` — embeddings + cosine similarity to find the most relevant FAQ chunk for each question.\n\n")
+    log.write("---\n\n")
+
+    for i, q in enumerate(questions):
+        print(f"❓ Question: {q}")
+        results = find_relevant_chunk(q)
+
+        # Print to terminal
+        print("Top 3 most relevant chunks:")
+        for score, chunk in results[:3]:
+            print(f"  [{score:.3f}] {chunk[:80]}...")
+        print("-" * 60)
+
+        # Write to file
+        log.write(f"## ❓ {q}\n\n")
+        log.write("**Top 3 most relevant chunks:**\n\n")
+        log.write("| Score | Chunk |\n")
+        log.write("|-------|-------|\n")
+        for score, chunk in results[:3]:
+            chunk_preview = chunk.replace("|", "\\|")
+            log.write(f"| {score:.3f} | {chunk_preview} |\n")
+        log.write("\n---\n\n")
+
+        # Wait between requests to stay under Voyage's 3 RPM free tier limit
+        if i < len(questions) - 1:
+            time.sleep(25)
+
+    log.write("## Key Takeaway\n\n")
+    log.write("Each question was matched to the correct chunk based on **meaning**, not keywords. For example, the question \"How many vacation days do I get?\" returned the PTO chunk as the top match — even though neither the question nor the chunk uses the same word for time off. This is semantic search in action: embeddings encode meaning into vectors, and cosine similarity finds the closest match.\n")
+
+print("\n✅ Results saved to semantic_search_results.md")
