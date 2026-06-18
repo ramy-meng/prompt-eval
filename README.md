@@ -1,50 +1,81 @@
 # Prompt Eval System
 
-A prompt evaluation system built with the Anthropic API that uses Claude as an automated judge (LLM-as-judge pattern) to score and compare prompt performance across multiple test cases. Also includes a Retrieval-Augmented Generation (RAG) demo, a Chain-of-Thought (CoT) version of the judge, and a semantic search system using embeddings to retrieve only the most relevant context — a production-style upgrade to RAG.
+A comprehensive prompt evaluation and prompt engineering project built with the Anthropic API. It demonstrates eight major eval patterns used by real AI teams — LLM-as-judge, Chain-of-Thought, binary, ordinal, classification, Likert, ROUGE-L, cosine similarity, and exact match — alongside a Retrieval-Augmented Generation (RAG) demo and a semantic search system using embeddings.
 
 ## What It Does
 
-- Runs a system prompt against multiple test cases
-- Uses a second Claude instance as an impartial judge to score each response
+- Runs system prompts against multiple test cases
+- Uses Claude as an automated judge (LLM-as-judge pattern) to score responses
 - Compares multiple prompts head-to-head and declares a winner
-- Produces a final aggregate score to measure prompt quality objectively
+- Demonstrates **eight different eval patterns** — from strict exact match to nuanced scale-based grading
 - Demonstrates RAG by augmenting Claude with a company FAQ as context
-- Demonstrates Chain-of-Thought (CoT) prompting to make the judge more transparent and accurate
-- Demonstrates semantic search using Voyage AI embeddings and cosine similarity
+- Demonstrates Chain-of-Thought (CoT) prompting to make the judge more transparent
+- Demonstrates semantic search using Voyage AI embeddings + cosine similarity
 
 ## What I Learned
 
 - How to use the Anthropic API end-to-end
 - The LLM-as-judge pattern used in real AI evaluation pipelines
+- When to use **strict** vs **loose** evals — exact match vs scale-based grading
+- The difference between LLM-judged and metric-based evals (ROUGE, cosine similarity)
 - How to iterate on prompts using data instead of guesswork
-- Why prompt scoring has variance and how to account for it
 - How Retrieval-Augmented Generation (RAG) gives Claude context for domain-specific questions
 - How Chain-of-Thought reasoning improves transparency and surfaces hidden weaknesses
-- How embeddings turn text into vectors so meaning can be compared mathematically
-- How semantic search retrieves relevant chunks based on meaning rather than keywords
+- How embeddings turn text into vectors so meaning can be compared mathematically — for both retrieval (semantic search) and measurement (consistency checks)
 - How Constitutional AI uses similar principles at training scale
+
+## The Eight Eval Patterns
+
+This project implements every major eval pattern a prompt engineer uses in production:
+
+| File | Pattern | Evaluator | Best For |
+|------|---------|-----------|----------|
+| `prompt_judge.py` | Scale (1-10) | LLM judge | Overall response quality |
+| `prompt_judge_cot.py` | Scale + Chain-of-Thought | LLM judge | Transparent quality grading |
+| `binary_eval.py` | Binary (correct / incorrect) | LLM judge | Factual accuracy with golden answers |
+| `ordinal_eval.py` | Ordinal (1-5) | LLM judge | Degree of quality (e.g. context utilization) |
+| `classification_eval.py` | Classification (compliant / not) | LLM judge | Safety & compliance (e.g. PHI leakage) |
+| `likert_eval.py` | Likert (1-5 trait) | LLM judge | Matching a target trait (e.g. tone) |
+| `rouge_eval.py` | ROUGE-L F1 | Pure math | Summarization vs reference |
+| `cosine_similarity_eval.py` | Cosine similarity | Embeddings | Response consistency across phrasings |
+| `exact_match_eval.py` | Exact match | String compare | Classification tasks (sentiment, intent) |
+
+**The principle:** use the strictest eval that fits your task. Exact match is fastest and cheapest when it applies. LLM judges are more flexible but cost more.
 
 ## Want to See the Results Without Running the Code?
 
-Check out the results files for the full breakdown — all test cases, judge scores, and key takeaways. No API key or setup needed.
+Each eval generates a markdown results file with full details — test cases, responses, judge reasoning, and final scores. No API key or setup needed.
 
-- [`prompt_and_eval/prompt_comparison_results.md`](./prompt_and_eval/prompt_comparison_results.md) — prompt eval results
-- [`prompt_and_eval/prompt_judge_results.md`](./prompt_and_eval/prompt_judge_results.md) — Chain-of-Thought judge results
-- [`rag/rag_results.md`](./rag/rag_results.md) — RAG demo results
-- [`rag/semantic_search_results.md`](./rag/semantic_search_results.md) — semantic search results
+- [`prompt_and_eval/prompt_comparison_results.md`](./prompt_and_eval/prompt_comparison_results.md)
+- [`prompt_and_eval/prompt_judge_results.md`](./prompt_and_eval/prompt_judge_results.md)
+- [`prompt_and_eval/binary_eval_results.md`](./prompt_and_eval/binary_eval_results.md)
+- [`prompt_and_eval/ordinal_eval_results.md`](./prompt_and_eval/ordinal_eval_results.md)
+- [`prompt_and_eval/classification_eval_results.md`](./prompt_and_eval/classification_eval_results.md)
+- [`prompt_and_eval/likert_eval_results.md`](./prompt_and_eval/likert_eval_results.md)
+- [`prompt_and_eval/rouge_eval_results.md`](./prompt_and_eval/rouge_eval_results.md)
+- [`prompt_and_eval/cosine_similarity_eval_results.md`](./prompt_and_eval/cosine_similarity_eval_results.md)
+- [`prompt_and_eval/exact_match_eval_results.md`](./prompt_and_eval/exact_match_eval_results.md)
+- [`rag/rag_results.md`](./rag/rag_results.md)
+- [`rag/semantic_search_results.md`](./rag/semantic_search_results.md)
 
 ## Project Structure
 
 ```
 prompt-eval/
 ├── prompt_and_eval/
-│   ├── prompt_comparison.py            # Compares Prompt A vs B vs C head-to-head with scores
-│   ├── prompt_judge.py                 # Single-prompt eval with baseline judge
-│   ├── prompt_judge_cot.py             # Same eval but with Chain-of-Thought reasoning
+│   ├── prompt_comparison.py            # Compares Prompt A vs B vs C head-to-head
+│   ├── prompt_judge.py                 # Scale-based eval with baseline judge
+│   ├── prompt_judge_cot.py             # Same eval with Chain-of-Thought reasoning
 │   ├── prompt_runner.py                # Runs a prompt against test cases, no judge
+│   ├── binary_eval.py                  # Binary correct/incorrect with golden answers
+│   ├── ordinal_eval.py                 # 1-5 ordinal scale for context utilization
+│   ├── classification_eval.py          # Compliance / safety eval (PHI leakage)
+│   ├── likert_eval.py                  # 1-5 Likert trait eval (target tone matching)
+│   ├── rouge_eval.py                   # ROUGE-L F1 for summarization
+│   ├── cosine_similarity_eval.py       # Consistency check using embeddings
+│   ├── exact_match_eval.py             # Strict string match for classification
 │   ├── test.py                         # First API call — verifies setup works
-│   ├── prompt_comparison_results.md    # Full prompt comparison results
-│   └── prompt_judge_results.md         # Chain-of-Thought judge results
+│   └── *_results.md                    # Generated result files per eval
 ├── rag/
 │   ├── rag_demo.py                     # Minimal RAG system using a company FAQ as context
 │   ├── semantic_search.py              # Embeddings + cosine similarity for chunk retrieval
@@ -67,7 +98,7 @@ cd prompt-eval
 
 **2. Install dependencies**
 ```bash
-pip install anthropic python-dotenv voyageai
+pip install anthropic python-dotenv voyageai rouge sentence-transformers
 ```
 
 **3. Add your API keys**
@@ -88,19 +119,22 @@ python3 prompt_and_eval/test.py
 # Run a prompt against test cases (no scoring)
 python3 prompt_and_eval/prompt_runner.py
 
-# Run a prompt and get an automated score (baseline judge)
+# Scale-based evals (LLM-as-judge)
 python3 prompt_and_eval/prompt_judge.py
-
-# Run the same eval with a Chain-of-Thought judge
 python3 prompt_and_eval/prompt_judge_cot.py
-
-# Compare Prompt A vs B vs C and see the winner
 python3 prompt_and_eval/prompt_comparison.py
 
-# Run the basic RAG demo using the company FAQ as context
-python3 rag/rag_demo.py
+# Other eval patterns
+python3 prompt_and_eval/binary_eval.py
+python3 prompt_and_eval/ordinal_eval.py
+python3 prompt_and_eval/classification_eval.py
+python3 prompt_and_eval/likert_eval.py
+python3 prompt_and_eval/rouge_eval.py
+python3 prompt_and_eval/cosine_similarity_eval.py
+python3 prompt_and_eval/exact_match_eval.py
 
-# Run the semantic search demo using embeddings
+# RAG demos
+python3 rag/rag_demo.py
 python3 rag/semantic_search.py
 ```
 
@@ -109,14 +143,10 @@ python3 rag/semantic_search.py
 ### Prompt Eval (LLM-as-Judge)
 
 **Step 1 — The Agent**
-Claude is given a system prompt and responds to customer support messages.
+Claude is given a system prompt and responds to test inputs.
 
 **Step 2 — The Judge**
-A second Claude call evaluates the response on four criteria:
-- **Politeness** — is it warm and respectful?
-- **Clarity** — is it easy to understand?
-- **Helpfulness** — does it actually solve the problem?
-- **Conciseness** — is it to the point without being cold?
+A second Claude call evaluates the response on defined criteria (politeness, clarity, helpfulness, conciseness, etc).
 
 **Step 3 — Compare & Iterate**
 Prompts are scored and ranked. The winning prompt is the one that consistently scores highest across all test cases.
@@ -130,6 +160,21 @@ The CoT version asks the judge to **reason through each criterion individually b
 - ✅ Transparent reasoning you can debug
 - ❌ Slower response time
 - ❌ Higher token cost
+
+### Eight Eval Patterns
+
+Different tasks call for different eval patterns:
+
+- **Exact match** — strict string comparison, ideal for classification tasks
+- **Binary** — LLM judge gives a yes/no verdict against a golden answer
+- **Ordinal (1-5)** — ranked categories of quality
+- **Likert (1-5)** — measures how strongly a response matches a target trait
+- **Scale (1-10)** — broader range, good for overall quality
+- **Classification** — verifies a response is compliant (no PHI leakage, etc)
+- **ROUGE-L F1** — pure math, measures word overlap with a reference
+- **Cosine similarity** — uses embeddings to measure semantic similarity across responses
+
+LLM judges are flexible but cost money. Metric-based evals (ROUGE, cosine similarity, exact match) are free and instant but only measure what they're designed for. Real eval pipelines combine multiple patterns for a complete picture.
 
 ### RAG Demo
 
@@ -202,11 +247,13 @@ See the full breakdown in [`rag/semantic_search_results.md`](./rag/semantic_sear
 
 ## Key Insight
 
-The judge has no memory of writing the response it evaluates. By giving Claude a different persona (evaluator vs. agent), it assesses the output neutrally — the same principle behind Constitutional AI and RLHF. Adding Chain-of-Thought reasoning to that judge makes the evaluation even more transparent and accurate, at the cost of speed and tokens. And by using embeddings for retrieval, the same RAG pattern scales from a 5-section FAQ to thousands of documents without breaking.
+The judge has no memory of writing the response it evaluates. By giving Claude a different persona (evaluator vs. agent), it assesses the output neutrally — the same principle behind Constitutional AI and RLHF. Adding Chain-of-Thought reasoning to that judge makes the evaluation even more transparent and accurate, at the cost of speed and tokens. And by using embeddings — both for retrieval (semantic search) and measurement (consistency checks) — the same underlying tool powers two completely different kinds of intelligence.
 
 ## Built With
 
 - [Anthropic API](https://docs.anthropic.com) — Claude
 - [Voyage AI](https://www.voyageai.com/) — embeddings for semantic search
+- [sentence-transformers](https://www.sbert.net/) — embeddings for consistency evals
+- [rouge](https://pypi.org/project/rouge/) — ROUGE-L metric
 - Python 3
 - python-dotenv
